@@ -152,6 +152,78 @@ plt.tight_layout()
 plt.show()
 ```
 
+## Analysis: Answering the Challenge Questions
+
+### Question 1: Bivariate Regression Analysis with StressSurvey
+
+**Question:** Run a bivariate regression of Anxiety on StressSurvey. What are the estimated coefficients? How do they compare to the true relationship?
+
+```{python}
+#| label: bivariate-stresssurvey-regression
+#| echo: true
+import statsmodels.api as sm
+import numpy as np
+
+# Prepare data for regression
+X_stresssurvey = observDF[['StressSurvey']]
+y_anxiety = observDF['Anxiety']
+
+# Add constant term for intercept
+X_with_const = sm.add_constant(X_stresssurvey)
+
+# Fit the regression model
+model_stresssurvey = sm.OLS(y_anxiety, X_with_const).fit()
+
+# Display results
+print("Bivariate Regression: Anxiety ~ StressSurvey")
+print("=" * 50)
+print(model_stresssurvey.summary())
+print("\nEstimated Coefficients:")
+print(f"Intercept (β₀): {model_stresssurvey.params['const']:.4f}")
+print(f"StressSurvey coefficient (β₁): {model_stresssurvey.params['StressSurvey']:.4f}")
+print(f"\nR-squared: {model_stresssurvey.rsquared:.4f}")
+```
+
+**Answer:**
+
+```{python}
+#| echo: false
+# Extract coefficients for discussion
+intercept_est = model_stresssurvey.params['const']
+coef_stresssurvey_est = model_stresssurvey.params['StressSurvey']
+r_squared_est = model_stresssurvey.rsquared
+
+print(f"Estimated Intercept (β₀): {intercept_est:.4f}")
+print(f"Estimated StressSurvey coefficient (β₁): {coef_stresssurvey_est:.4f}")
+print(f"R-squared: {r_squared_est:.4f}")
+print("\nTrue Relationship Coefficients:")
+print("True Intercept (β₀): 0.0000")
+print("True Stress coefficient (β₁): 1.0000")
+print("True Time coefficient (β₂): 0.1000")
+```
+
+The bivariate regression of Anxiety on StressSurvey yields the following estimated coefficients (see output above for exact values):
+
+- **Intercept (β₀):** The estimated intercept differs from the true value of 0
+- **StressSurvey coefficient (β₁):** The estimated coefficient differs from the true Stress coefficient of 1
+- **R-squared:** See output above
+
+**Comparison to True Relationship:**
+
+The true relationship is: $Anxiety = Stress + 0.1 \times Time$
+
+When we regress Anxiety on StressSurvey alone, we're not capturing the true relationship because:
+
+1. **StressSurvey is a proxy for Stress**, not Stress itself. The relationship between StressSurvey and actual Stress is non-linear (as shown in @fig-stress-proxy).
+
+2. **The true coefficient on Stress is 1**, meaning a one-unit increase in actual Stress leads to a one-unit increase in Anxiety. However, when we use StressSurvey as the predictor, the estimated coefficient will be different from 1. This difference occurs because StressSurvey has a non-linear relationship with actual Stress, and the regression is trying to fit a linear relationship to a non-linear pattern.
+
+3. **The model omits Time**, which has a true coefficient of 0.1. This omission means the regression is trying to capture both the Stress effect and the Time effect through the StressSurvey coefficient alone, further distorting the estimated coefficient.
+
+4. **The intercept is not zero** as in the true relationship, because the non-linear relationship between StressSurvey and Stress, combined with the omitted Time variable, forces the regression line to adjust to minimize the sum of squared errors.
+
+This demonstrates a key problem: even when we have a "good" proxy variable (StressSurvey is monotonically related to Stress), the non-linear relationship between the proxy and the true variable, combined with omitted variables, can lead to estimated coefficients that are quite different from the true relationship.
+
 ## Challenge Requirements 📋
 
 ### Minimum Requirements for Any Points on Challenge
